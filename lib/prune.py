@@ -5,10 +5,10 @@ import torch.nn as nn
 from .sparsegpt import SparseGPT 
 from .layerwrapper import WrappedGPT
 from .data import get_loaders 
-from transformers.models.falcon.modeling_falcon import FalconLinear
+
 from .ablate import AblateGPT 
 
-def find_layers(module, layers=['Linear', 'FalconLinear'], name=''):
+def find_layers(module, layers=['Linear', 'FalconLinear'], name='', ignoreLayers = ['FalconAttention']):
     """
     Recursively find the layers of a certain type in a module.
 
@@ -23,6 +23,9 @@ def find_layers(module, layers=['Linear', 'FalconLinear'], name=''):
     module_type_name = type(module).__name__
     if module_type_name in layers:
         return {name: module}
+    if module_type_name in ignoreLayers:
+        print("ignoring", module_type_name, name)
+        return {}
     res = {}
     for name1, child in module.named_children():
         res.update(find_layers(
@@ -39,7 +42,7 @@ def check_sparsity(model):
     total_params = 0
     for i in range(len(layers)):
         layer = layers[i]
-        subset = find_layers(layer)
+        subset = find_layers(layer, ignoreLayers=['FalconAttention'])
 
         sub_count = 0
         sub_params = 0
@@ -139,7 +142,7 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
     layers = model.transformer.h
     for i in range(len(layers)):
         layer = layers[i]
-        subset = find_layers(layer)
+        subset = find_layers(layer, ignoreLayers = ['FalconAttention'])
         print("subset: ", subset)
         if f"model.layers.{i}" in model.hf_device_map:   ## handle the case for llama-30B and llama-65B, when the device map has multiple GPUs;
             dev = model.hf_device_map[f"model.layers.{i}"]
