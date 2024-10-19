@@ -28,4 +28,4 @@ class="center">
 
 
 ## Acknowledgement
-This repository is build upon the [locuslab/wanda](https://github.com/IST-DASLab/sparsegpt](https://github.com/locuslab/wanda)) repository.
+This repository is build upon the [locuslab/wanda](https://github.com/locuslab/wanda) repository.
